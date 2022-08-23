@@ -2,8 +2,10 @@ from django.forms import model_to_dict
 from django.shortcuts import render
 from django.http import HttpResponse
 from rest_framework import generics, viewsets
+from rest_framework.authentication import *
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import *
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,16 +20,26 @@ def index(request):
     return HttpResponse('Hello, World!')
 
 
+class WomenAPIPagination(PageNumberPagination):
+    page_size = 3
+    page_size_query_param = 'page_size'
+    max_page_size = 100000
+
+
 class WomenViewSet(viewsets.ModelViewSet):
     # queryset = Women.objects.all()
     serializer_class = WomenSerializer
-    permission_classes = (IsAdminOrReadOnly, IsOwnerOrReadOnly, )
+    # permission_classes = (IsAdminOrReadOnly, IsOwnerOrReadOnly, )
+    # authentication_classes = (TokenAuthentication, SessionAuthentication, )
+    permission_classes = (IsAuthenticated, )
+    pagination_class = WomenAPIPagination
 
     def get_queryset(self):
         pk = self.kwargs.get('pk')
 
         if not pk:
-            return Women.objects.all()[:3]
+            # return Women.objects.all()[:3]
+            return Women.objects.all()
 
         return Women.objects.filter(pk=pk)
 
